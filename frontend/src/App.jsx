@@ -53,7 +53,7 @@ function App() {
     try {
 
       await axios.post(
-        "https://ai-backend-pwr6.onrender.com",
+        "https://ai-backend-pwr6.onrender.com/api/ai/shortlist",
         {
           ...formData,
           skills: formData.skills.split(","),
@@ -85,7 +85,7 @@ function App() {
     try {
 
       const response = await axios.post(
-        "https://ai-backend-pwr6.onrender.com",
+        "https://ai-backend-pwr6.onrender.com/api/ai/shortlist",
         {
           requiredSkills: requiredSkills.split(","),
           minExperience,
@@ -105,7 +105,7 @@ function App() {
     try {
 
       const response = await axios.post(
-        "https://ai-backend-pwr6.onrender.com",
+        "https://ai-backend-pwr6.onrender.com/api/ai/shortlist",
         {
           requiredSkills: requiredSkills.split(","),
           minExperience,
