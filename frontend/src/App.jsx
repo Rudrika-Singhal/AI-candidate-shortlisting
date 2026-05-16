@@ -33,7 +33,7 @@ function App() {
     try {
 
       const response = await axios.get(
-        "http://localhost:5000/api/candidates"
+        "https://ai-backend-pwr6.onrender.com"
       );
 
       setCandidates(response.data);
@@ -53,7 +53,7 @@ function App() {
     try {
 
       await axios.post(
-        "http://localhost:5000/api/candidates",
+        "https://ai-backend-pwr6.onrender.com",
         {
           ...formData,
           skills: formData.skills.split(","),
@@ -85,7 +85,7 @@ function App() {
     try {
 
       const response = await axios.post(
-        "http://localhost:5000/api/match",
+        "https://ai-backend-pwr6.onrender.com",
         {
           requiredSkills: requiredSkills.split(","),
           minExperience,
@@ -105,7 +105,7 @@ function App() {
     try {
 
       const response = await axios.post(
-        "http://localhost:5000/api/ai/shortlist",
+        "https://ai-backend-pwr6.onrender.com",
         {
           requiredSkills: requiredSkills.split(","),
           minExperience,
