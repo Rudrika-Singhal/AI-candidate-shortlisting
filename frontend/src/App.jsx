@@ -2,8 +2,9 @@ import "./App.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-function App() {
+const API_BASE = "https://ai-backend-pwr6.onrender.com";
 
+function App() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -13,12 +14,9 @@ function App() {
   });
 
   const [candidates, setCandidates] = useState([]);
-
   const [requiredSkills, setRequiredSkills] = useState("");
   const [minExperience, setMinExperience] = useState("");
-
   const [matchedCandidates, setMatchedCandidates] = useState([]);
-
   const [aiResult, setAiResult] = useState("");
 
   const handleChange = (e) => {
@@ -28,19 +26,13 @@ function App() {
     });
   };
 
+  // ✅ GET ALL CANDIDATES (FIXED ROUTE)
   const fetchCandidates = async () => {
-
     try {
-
-      const response = await axios.get(
-        "https://ai-backend-pwr6.onrender.com"
-      );
-
-      setCandidates(response.data);
-
+      const res = await axios.get(`${API_BASE}/api/candidates`);
+      setCandidates(res.data);
     } catch (error) {
-
-      console.log(error);
+      console.log("Fetch error:", error.message);
     }
   };
 
@@ -48,17 +40,14 @@ function App() {
     fetchCandidates();
   }, []);
 
+  // ✅ ADD CANDIDATE (FIXED ROUTE)
   const addCandidate = async () => {
-
     try {
-
-      await axios.post(
-        "https://ai-backend-pwr6.onrender.com/api/ai/shortlist",
-        {
-          ...formData,
-          skills: formData.skills.split(","),
-        }
-      );
+      await axios.post(`${API_BASE}/api/candidates`, {
+        ...formData,
+        skills: formData.skills.split(",").map((s) => s.trim()),
+        experience: Number(formData.experience),
+      });
 
       alert("Candidate Added Successfully");
 
@@ -71,274 +60,125 @@ function App() {
       });
 
       fetchCandidates();
-
     } catch (error) {
-
-      console.log(error);
-
+      console.log("Add error:", error.message);
       alert("Error adding candidate");
     }
   };
 
+  // ✅ MATCH CANDIDATES
   const matchCandidates = async () => {
-
     try {
+      const res = await axios.post(`${API_BASE}/api/match`, {
+        requiredSkills: requiredSkills.split(",").map((s) => s.trim()),
+        minExperience: Number(minExperience),
+      });
 
-      const response = await axios.post(
-        "https://ai-backend-pwr6.onrender.com/api/ai/shortlist",
-        {
-          requiredSkills: requiredSkills.split(","),
-          minExperience,
-        }
-      );
-
-      setMatchedCandidates(response.data);
-
+      setMatchedCandidates(res.data);
     } catch (error) {
-
-      console.log(error);
+      console.log("Match error:", error.message);
     }
   };
 
+  // ✅ AI SHORTLIST
   const aiShortlist = async () => {
-
     try {
+      const res = await axios.post(`${API_BASE}/api/ai/shortlist`, {
+        requiredSkills: requiredSkills.split(",").map((s) => s.trim()),
+        minExperience: Number(minExperience),
+      });
 
-      const response = await axios.post(
-        "https://ai-backend-pwr6.onrender.com/api/ai/shortlist",
-        {
-          requiredSkills: requiredSkills.split(","),
-          minExperience,
-        }
-      );
-
-      const result = response.data.rankedCandidates
+      const result = res.data.rankedCandidates
         .map(
-          (candidate) =>
-            `
-Name: ${candidate.name}
-
-Match Score: ${candidate.matchScore}%
-
-Recommendation: ${candidate.recommendation}
-
-Skills: ${candidate.skills.join(", ")}
-
-Experience: ${candidate.experience} years
+          (c) => `
+Name: ${c.name}
+Match Score: ${c.matchScore}%
+Recommendation: ${c.recommendation}
+Skills: ${c.skills.join(", ")}
+Experience: ${c.experience} years
 `
         )
-        .join("\n-------------------\n");
+        .join("\n-----------------\n");
 
       setAiResult(result);
-
     } catch (error) {
-
-      console.log(error);
-
+      console.log("AI error:", error.message);
       alert("AI Shortlisting Failed");
     }
   };
 
- return (
+  return (
+    <div className="container">
+      <h1>AI Candidate Shortlisting System</h1>
 
-<div className="container">
+      {/* ADD CANDIDATE */}
+      <div className="section">
+        <h2>Add Candidate</h2>
 
-  <h1 className="title">
-    AI Candidate Shortlisting System
-  </h1>
+        <input name="name" value={formData.name} onChange={handleChange} placeholder="Name" />
+        <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" />
+        <input name="skills" value={formData.skills} onChange={handleChange} placeholder="Skills (comma separated)" />
+        <input name="experience" value={formData.experience} onChange={handleChange} placeholder="Experience" />
+        <textarea name="bio" value={formData.bio} onChange={handleChange} placeholder="Bio" />
 
-  <div className="section">
-
-```
-<h2>Add Candidate</h2>
-
-<input
-  className="input"
-  type="text"
-  name="name"
-  placeholder="Enter Name"
-  value={formData.name}
-  onChange={handleChange}
-/>
-
-<input
-  className="input"
-  type="email"
-  name="email"
-  placeholder="Enter Email"
-  value={formData.email}
-  onChange={handleChange}
-/>
-
-<input
-  className="input"
-  type="text"
-  name="skills"
-  placeholder="Enter Skills"
-  value={formData.skills}
-  onChange={handleChange}
-/>
-
-<input
-  className="input"
-  type="number"
-  name="experience"
-  placeholder="Experience"
-  value={formData.experience}
-  onChange={handleChange}
-/>
-
-<textarea
-  className="textarea"
-  name="bio"
-  placeholder="Enter Bio"
-  value={formData.bio}
-  onChange={handleChange}
-/>
-
-<br /><br />
-
-<button className="button" onClick={addCandidate}>
-  Add Candidate
-</button>
-```
-
-  </div>
-
-  <div className="section">
-
-```
-<h2>Job Requirements</h2>
-
-<input
-  className="input"
-  type="text"
-  placeholder="Required Skills"
-  value={requiredSkills}
-  onChange={(e) =>
-    setRequiredSkills(e.target.value)
-  }
-/>
-
-<input
-  className="input"
-  type="number"
-  placeholder="Minimum Experience"
-  value={minExperience}
-  onChange={(e) =>
-    setMinExperience(e.target.value)
-  }
-/>
-
-<button className="button" onClick={matchCandidates}>
-  Match Candidates
-</button>
-
-<button className="button" onClick={aiShortlist}>
-  AI Shortlist
-</button>
-```
-
-  </div>
-
-  <div className="section">
-
-```
-<h2>Matched Candidates</h2>
-
-<div className="card-grid">
-
-  {
-    matchedCandidates.map((candidate, index) => (
-
-      <div className="card" key={index}>
-
-        <h3>{candidate.name}</h3>
-
-        <p className="score">
-          Match Score: {candidate.matchScore}%
-        </p>
-
-        <p>
-          <strong>Skills:</strong>
-          {" "}
-          {candidate.skills.join(", ")}
-        </p>
-
-        <p>
-          <strong>Experience:</strong>
-          {" "}
-          {candidate.experience} years
-        </p>
-
+        <button onClick={addCandidate}>Add Candidate</button>
       </div>
-    ))
-  }
 
-</div>
-```
+      {/* JOB REQUIREMENTS */}
+      <div className="section">
+        <h2>Job Requirements</h2>
 
-  </div>
+        <input
+          value={requiredSkills}
+          onChange={(e) => setRequiredSkills(e.target.value)}
+          placeholder="Required Skills"
+        />
 
-  <div className="section">
+        <input
+          value={minExperience}
+          onChange={(e) => setMinExperience(e.target.value)}
+          placeholder="Min Experience"
+        />
 
-```
-<h2>AI Recommendation</h2>
-
-<div className="ai-box">
-  {aiResult}
-</div>
-```
-
-  </div>
-
-  <div className="section">
-
-```
-<h2>All Candidates</h2>
-
-<div className="card-grid">
-
-  {
-    candidates.map((candidate) => (
-
-      <div className="card" key={candidate._id}>
-
-        <h3>{candidate.name}</h3>
-
-        <p>
-          <strong>Email:</strong>
-          {" "}
-          {candidate.email}
-        </p>
-
-        <p>
-          <strong>Skills:</strong>
-          {" "}
-          {candidate.skills.join(", ")}
-        </p>
-
-        <p>
-          <strong>Experience:</strong>
-          {" "}
-          {candidate.experience} years
-        </p>
-
-        <p>{candidate.bio}</p>
-
+        <button onClick={matchCandidates}>Match</button>
+        <button onClick={aiShortlist}>AI Shortlist</button>
       </div>
-    ))
-  }
 
-</div>
-```
+      {/* MATCHED */}
+      <div className="section">
+        <h2>Matched Candidates</h2>
 
-  </div>
+        {matchedCandidates.map((c, i) => (
+          <div key={i} className="card">
+            <h3>{c.name}</h3>
+            <p>Score: {c.matchScore}%</p>
+            <p>{c.skills?.join(", ")}</p>
+          </div>
+        ))}
+      </div>
 
-</div>
+      {/* AI RESULT */}
+      <div className="section">
+        <h2>AI Result</h2>
+        <pre>{aiResult}</pre>
+      </div>
 
-);
+      {/* ALL CANDIDATES */}
+      <div className="section">
+        <h2>All Candidates</h2>
 
+        {candidates.map((c) => (
+          <div key={c._id} className="card">
+            <h3>{c.name}</h3>
+            <p>{c.email}</p>
+            <p>{c.skills?.join(", ")}</p>
+            <p>{c.experience} years</p>
+            <p>{c.bio}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default App;
